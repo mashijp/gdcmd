@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include "config.h"
+#include <gd.h>
 
 int main(int argc, char *argv[]) {
-    puts("Hello World");
-    printf("GDCmd Version %s", GDCMD_VERSION);
+    printf("GDCmd Version %s (libgd %s)", GDCMD_VERSION_STRING, GD_VERSION_STRING);
+    puts("");
     return 0;
 }
