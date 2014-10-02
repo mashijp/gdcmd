@@ -3,17 +3,15 @@
 #include <gd.h>
 #include <getopt.h>
 #include <stdlib.h>
-#include <Kernel/string.h>
 
-#define EXIT_FAILURE_COMMON 1
 #define EXIT_CANNOT_OPEN_FILE 2
 #define FILE_HEAD_READ_SIZE 8
 
 void usage();
 
-enum gdcmdImageType {
+typedef enum {
     GIF, JPEG, PNG, UNKNOWN
-};
+} gdcmdImageType;
 
 char *filename;
 
@@ -55,18 +53,12 @@ int headcmp(char c1[], char c2[], int size) {
     return result;
 }
 
-int main(int argc, char *argv[]) {
-    option(argc, argv);
-    FILE *fp = fopen(filename, "rb");
-    if (fp == NULL) {
-        fprintf(stderr, "Cannot open the file: %s\n", filename);
-        exit(EXIT_CANNOT_OPEN_FILE);
-    }
+gdcmdImageType getImageType(FILE *fp) {
     char head[FILE_HEAD_READ_SIZE];
     size_t result = fread(head, 1, FILE_HEAD_READ_SIZE, fp);
+    rewind(fp);
     if (result < FILE_HEAD_READ_SIZE) {
-        fprintf(stderr, "The file may not be an image file");
-        exit(EXIT_FAILURE_COMMON);
+        return UNKNOWN;
     }
 
     char gif_head[] = {'G', 'I', 'F'};
@@ -76,15 +68,60 @@ int main(int argc, char *argv[]) {
     int png_head_size = 8;
 
     if (headcmp(head, gif_head, gif_head_size)) {
-        fprintf(stdout, "GIF");
+        return GIF;
     } else if (headcmp(head, png_head, png_head_size)){
-        fprintf(stdout, "PNG");
+        return PNG;
     } else {
-        fprintf(stderr, "Unknown image type");
-        exit(EXIT_FAILURE_COMMON);
+        return UNKNOWN;
+    }
+}
+
+char* convertImageTypeToStr(gdcmdImageType t) {
+    switch(t) {
+        case GIF:
+            return "GIF";
+        case JPEG:
+            return "JPEG";
+        case PNG:
+            return "PNG";
+        case UNKNOWN:
+            return "UNKNOWN";
+    }
+}
+
+int main(int argc, char *argv[]) {
+    option(argc, argv);
+    FILE *fp = fopen(filename, "rb");
+    if (fp == NULL) {
+        fprintf(stderr, "Cannot open the file: %s\n", filename);
+        exit(EXIT_CANNOT_OPEN_FILE);
+    }
+
+    gdcmdImageType t = getImageType(fp);
+    fprintf(stdout, "Type: %s\n", convertImageTypeToStr(t));
+
+
+    gdImagePtr ptr;
+    switch(t) {
+        case GIF:
+            ptr = gdImageCreateFromGif(fp);
+            break;
+        case PNG:
+            ptr = gdImageCreateFromPng(fp);
+            break;
+        case JPEG:
+            ptr = gdImageCreateFromJpeg(fp);
+            break;
+        case UNKNOWN:
+            fprintf(stderr, "This file may not be an image file");
+            exit(EXIT_FAILURE);
     }
 
     fclose(fp);
+
+    fprintf(stdout, "Size: %dx%d", ptr->sx, ptr->sy);
+
+    gdImageDestroy(ptr);
 
     return 0;
 }
@@ -94,5 +131,5 @@ void usage() {
     fprintf(stderr, "%s\n%s\n",
             "gdidentify [filename]",
             "ex) gdidentify /tmp/fuga.gif");
-    exit(EXIT_FAILURE_COMMON);
+    exit(EXIT_FAILURE);
 }
