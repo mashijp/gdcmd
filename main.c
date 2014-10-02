@@ -3,6 +3,7 @@
 #include <gd.h>
 #include <getopt.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define EXIT_CANNOT_OPEN_FILE 2
 #define FILE_HEAD_READ_SIZE 8
@@ -10,7 +11,7 @@
 void usage();
 
 typedef enum {
-    GIF, JPEG, PNG, UNKNOWN
+    GIF, JPEG, PNG, BMP, UNKNOWN = 99
 } gdcmdImageType;
 
 char *filename;
@@ -42,16 +43,6 @@ void option(int argc, char *argv[]) {
     filename = argv[optind];
 }
 
-int headcmp(char c1[], char c2[], int size) {
-    int result = 1;
-    for (int i = 0; i < size; i++) {
-        if (c1[i] != c2[i]) {
-            result = 0;
-            break;
-        }
-    }
-    return result;
-}
 
 gdcmdImageType getImageType(FILE *fp) {
     char head[FILE_HEAD_READ_SIZE];
@@ -64,13 +55,23 @@ gdcmdImageType getImageType(FILE *fp) {
     char gif_head[] = {'G', 'I', 'F'};
     int gif_head_size = 3;
 
-    char png_head[] = {0x89, 0x50, 0x4e, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+    char png_head[] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
     int png_head_size = 8;
 
-    if (headcmp(head, gif_head, gif_head_size)) {
+    char jpeg_head[] = {0xFF, 0xD8, 0xFF};
+    int jpeg_head_size = 3;
+
+    char bmp_head[] = {'B', 'M'};
+    int bmp_head_size = 2;
+
+    if (memcmp(head, gif_head, gif_head_size) == 0) {
         return GIF;
-    } else if (headcmp(head, png_head, png_head_size)){
+    } else if (memcmp(head, jpeg_head, jpeg_head_size) == 0) {
+        return JPEG;
+    } else if (memcmp(head, png_head, png_head_size) == 0) {
         return PNG;
+    } else if (memcmp(head, bmp_head, bmp_head_size) == 0) {
+        return BMP;
     } else {
         return UNKNOWN;
     }
@@ -84,6 +85,8 @@ char* convertImageTypeToStr(gdcmdImageType t) {
             return "JPEG";
         case PNG:
             return "PNG";
+        case BMP:
+            return "BMP";
         case UNKNOWN:
             return "UNKNOWN";
     }
@@ -112,6 +115,9 @@ int main(int argc, char *argv[]) {
         case JPEG:
             ptr = gdImageCreateFromJpeg(fp);
             break;
+        case BMP:
+            ptr = gdImageCreateFromBmp(fp);
+            break;
         case UNKNOWN:
             fprintf(stderr, "This file may not be an image file");
             exit(EXIT_FAILURE);
@@ -119,7 +125,7 @@ int main(int argc, char *argv[]) {
 
     fclose(fp);
 
-    fprintf(stdout, "Size: %dx%d", ptr->sx, ptr->sy);
+    fprintf(stdout, "Size: %dx%d\n", ptr->sx, ptr->sy);
 
     gdImageDestroy(ptr);
 
