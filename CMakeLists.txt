@@ -10,9 +10,11 @@ configure_file(
 
 include_directories("${PROJECT_SOURCE_DIR}")
 
-find_package(PkgConfig)
-pkg_search_module(GD REQUIRED gdlib)
-include_directories("${GD_INCLUDE_DIRS}")
-
 set(SOURCE_FILES main.c)
 add_executable(gdcmd ${SOURCE_FILES})
+
+find_package(PkgConfig)
+pkg_search_module(GD REQUIRED gdlib)
+include_directories(${GD_INCLUDE_DIRS})
+link_directories(${GD_LIBRARY_DIRS})
+target_link_libraries(gdcmd ${GD_LIBRARIES})
