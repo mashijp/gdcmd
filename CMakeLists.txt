@@ -10,7 +10,7 @@ configure_file(
 
 include_directories("${PROJECT_SOURCE_DIR}")
 
-set(SOURCE_FILES main.c)
+set(SOURCE_FILES main.c gif.c)
 add_executable(gdcmd ${SOURCE_FILES})
 
 find_package(PkgConfig)

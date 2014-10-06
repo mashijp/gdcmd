@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "config.h"
+#include "gif.h"
 #include <gd.h>
 #include <getopt.h>
 #include <stdlib.h>
@@ -108,6 +109,7 @@ int main(int argc, char *argv[]) {
     switch(t) {
         case GIF:
             ptr = gdImageCreateFromGif(fp);
+            read_gif(fp);
             break;
         case PNG:
             ptr = gdImageCreateFromPng(fp);
