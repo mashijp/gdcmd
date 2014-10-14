@@ -77,6 +77,7 @@ void read_gif(FILE *fp) {
 
 
     for (;;) {
+        printf("\n[Position: %07X]\n", ftell(fp));
         if (fread(buffer, 1, 1, fp) < 1) {
             break;
         }
@@ -148,11 +149,9 @@ void read_gif(FILE *fp) {
                 }
                 fseek(fp, blockSize, SEEK_CUR);
             }
+        } else {
+            if (GDCMD_VERBOSE) printf("Unknown flag: %X\n", buffer[0]);
         }
     }
-
-
-    if (GDCMD_VERBOSE) printf("%X", buffer[0]);
-
 
 }
