@@ -53,6 +53,7 @@ void read_gif(FILE *fp) {
                 globalColorTableFlag, colorResolution, sortFlag, sizeOfGlobalColorTable);
     }
 
+    //Background color index and Pixel aspect ratio
     fread(buffer, 1, 2, fp);
 
     //global color table skip
@@ -122,8 +123,6 @@ void read_gif(FILE *fp) {
             int sizeOfColorTable = buffer[0] & 7;
             if (GDCMD_VERBOSE) printf("localColorTableFlag: %s, interlaceFlag: %s, sortFlag: %s, sizeofColorTable: %d\n", to_bool_str(localColorTableFlag), to_bool_str(interlaceFlag), to_bool_str(sortFlag), sizeOfColorTable);
 
-            fread(buffer, 1, 2, fp); //Background color index and Pixel aspect ratio
-
             if (localColorTableFlag) {
                 if (GDCMD_VERBOSE) printf("LocalColorSkipping... ");
                 int skip = (1 << (sizeOfColorTable + 1)) * 3;
@@ -133,7 +132,11 @@ void read_gif(FILE *fp) {
                 }
                 fseek(fp, skip, SEEK_CUR);
             }
+            printf("\n (Position: %07X)\n", ftell(fp));
             fread(buffer, 1, 1, fp); //LZW Minimum Code Size
+            if (GDCMD_VERBOSE) {
+                printf("LZW Minimum Code Size: %d\n", buffer[0]);
+            }
             for (;;) {
                 fread(buffer, 1, 1, fp);
                 int blockSize = buffer[0];
